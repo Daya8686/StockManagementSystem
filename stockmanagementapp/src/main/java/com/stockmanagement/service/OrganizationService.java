@@ -151,16 +151,16 @@ public class OrganizationService {
 		
 		public ApiResponseHandler updateOrganizationImage(MultipartFile image) {
 			
-//			if(image.getContentType()==null || !ImageService.ALLOWED_IMAGE_TYPES.contains(image.getContentType())) {
-//				throw new ImageSaverServiceExceptionHandler("Invalid image type. Allowed types are PNG, JPG, JPEG, SVG.", HttpStatus.BAD_REQUEST);
-//			}
-//			
-//			
-//			String newFilename = ImageService.getImagePathForImage(image, savedOrganization.getOrgId(), baseImageDir);
-//			
-//			savedOrganization.setImagePath("organizations/"+newFilename);
-//			
-//			Organization savedOrgfinal = organizationRepo.save(savedOrganization);
+			if(image.getContentType()==null || !ImageService.ALLOWED_IMAGE_TYPES.contains(image.getContentType())) {
+				throw new ImageSaverServiceExceptionHandler("Invalid image type. Allowed types are PNG, JPG, JPEG, SVG.", HttpStatus.BAD_REQUEST);
+			}
+			
+			
+			String newFilename = ImageService.getImagePathForImage(image, savedOrganization.getOrgId(), baseImageDir);
+			
+			savedOrganization.setImagePath("organizations/"+newFilename);
+			
+			Organization savedOrgfinal = organizationRepo.save(savedOrganization);
 			
 		}
 		
