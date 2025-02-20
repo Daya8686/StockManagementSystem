@@ -3,6 +3,7 @@ package com.stockmanagement.controller;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stockmanagement.DTO.CreateOrganizationDTO;
-import com.stockmanagement.DTO.OrganizationDTO;
 import com.stockmanagement.service.OrganizationService;
 import com.stockmanagement.util.ApiResponseHandler;
 
@@ -72,9 +72,10 @@ public class OrganizationController {
 	}
 	
 	@PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
-	@PostMapping(value="/update-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PutMapping(value="/update-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<ApiResponseHandler> updateOrgImag(@RequestPart("image") MultipartFile image ){
-		organizationService.updateOrganizationImage(image);
+		ApiResponseHandler updateOrganizationImage = organizationService.updateOrganizationImage(image);
+		return ResponseEntity.status(HttpStatus.OK).body(updateOrganizationImage);
 	}
 	
 

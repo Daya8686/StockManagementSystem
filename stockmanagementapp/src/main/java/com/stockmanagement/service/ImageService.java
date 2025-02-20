@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -79,10 +80,12 @@ public class ImageService {
 		}
 		byte[] imageBytes = Files.readAllBytes(imagePath);
         String mimeType = Files.probeContentType(imagePath);
-
+        
+        
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + imageNameWithDirectory + "\"")
                 .contentType(MediaType.parseMediaType(mimeType != null ? mimeType : "application/octet-stream"))
+                .cacheControl(CacheControl.noCache()) 
                 .body(imageBytes);
 
     } catch (IOException e) {

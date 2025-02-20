@@ -2,13 +2,15 @@ package com.stockmanagement.Exception;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.hibernate.TypeMismatchException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -32,24 +35,26 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	@Autowired
 	private ErrorResponse errorResponse;
 	
-	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	public ErrorResponse handleValidationExceptions(MethodArgumentNotValidException ex, BindingResult result) {
+	 @Override
+	    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+	            MethodArgumentNotValidException ex, 
+	            HttpHeaders headers, 
+	            HttpStatusCode status, 
+	            WebRequest request) {
 
-		// Create ErrorResponse object and populate with validation errors
-		
-		errorResponse.setStatus(HttpStatus.BAD_REQUEST.value());
-		errorResponse.setMessage("Validation error");
-		errorResponse.setTimestamp(LocalDateTime.now());
+	        errorResponse.setStatus(HttpStatus.BAD_REQUEST.value());
+	        errorResponse.setMessage("Validation error");
+	        errorResponse.setTimestamp(LocalDateTime.now());
 
-		// Extract field errors and populate error details
-		List<FieldError> fieldErrors = result.getFieldErrors();
-		Map<String, String> errors = new HashMap<>();
-		for (FieldError fieldError : fieldErrors) {
-			errors.put(fieldError.getField(), fieldError.getDefaultMessage());
-		}
-		errorResponse.setErrors(errors);
+	        // Extract field errors and populate error details
+	        Map<String, String> errors = ex.getBindingResult()
+	                .getFieldErrors()
+	                .stream()
+	                .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
 
-		return errorResponse;
+	        errorResponse.setErrors(errors);
+
+	        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
 	}
 
 //	@ExceptionHandler( TypeMismatchException.class)

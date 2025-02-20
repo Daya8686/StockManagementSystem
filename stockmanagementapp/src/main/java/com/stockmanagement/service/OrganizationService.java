@@ -145,22 +145,30 @@ public class OrganizationService {
 			organization.setAddress(createOrganizationDTO.getAddress());
 			organization.setPincode(createOrganizationDTO.getPincode());
 			Organization savedOrganization = organizationRepo.save(organization);
-			return new ApiResponseHandler(savedOrganization, HttpStatus.OK.value(), "Success");	
+			OrganizationDTO organizationDTO = modelMapper.map(savedOrganization, OrganizationDTO.class);
+			
+			return new ApiResponseHandler(organizationDTO, HttpStatus.OK.value(), "Success");	
 		}
 		
 		
+		@Transactional
 		public ApiResponseHandler updateOrganizationImage(MultipartFile image) {
 			
 			if(image.getContentType()==null || !ImageService.ALLOWED_IMAGE_TYPES.contains(image.getContentType())) {
 				throw new ImageSaverServiceExceptionHandler("Invalid image type. Allowed types are PNG, JPG, JPEG, SVG.", HttpStatus.BAD_REQUEST);
 			}
+			Users users = UserPrincipleObject.getUser();
+			Organization organization = users.getOrganization();
 			
+			String newFilename = ImageService.getImagePathForImage(image, organization.getOrgId(), baseImageDir);
 			
-			String newFilename = ImageService.getImagePathForImage(image, savedOrganization.getOrgId(), baseImageDir);
+			organization.setImagePath("organizations/"+newFilename);
 			
-			savedOrganization.setImagePath("organizations/"+newFilename);
+			Organization savedOrgfinal = organizationRepo.save(organization);
 			
-			Organization savedOrgfinal = organizationRepo.save(savedOrganization);
+			OrganizationDTO organizationDTO = modelMapper.map(savedOrgfinal, OrganizationDTO.class);
+			
+			return new ApiResponseHandler(organizationDTO, HttpStatus.OK.value(), "Success");
 			
 		}
 		
