@@ -1,8 +1,10 @@
 package com.stockmanagement.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.stockmanagement.DTO.BrandDTO;
 import com.stockmanagement.DTO.CreateBrandDTO;
 import com.stockmanagement.Exception.BrandServiceExceptionHandler;
+import com.stockmanagement.Exception.CategoryServiceExceptionHandler;
 import com.stockmanagement.Exception.ImageSaverServiceExceptionHandler;
 import com.stockmanagement.entity.Brand;
 import com.stockmanagement.entity.Category;
@@ -24,6 +27,7 @@ import com.stockmanagement.principal.UserPrincipal;
 import com.stockmanagement.repository.BrandRepository;
 import com.stockmanagement.repository.CategoryRepository;
 import com.stockmanagement.util.ApiResponseHandler;
+import com.stockmanagement.util.UserPrincipleObject;
 
 import jakarta.transaction.Transactional;
 
@@ -45,17 +49,17 @@ public class BrandService {
 	@Modifying
 	public ApiResponseHandler createNewBrand(UUID categoryId, CreateBrandDTO createBrandDTO, MultipartFile image) {
 		
-		if(image.getContentType()==null || !ImageService.ALLOWED_IMAGE_TYPES.contains(image.getContentType())) {
-			throw new ImageSaverServiceExceptionHandler("Invalid image type. Allowed types are PNG, JPG, JPEG, SVG.", HttpStatus.BAD_REQUEST);
-		}
 		
 		Brand brand = modelMapper.map(createBrandDTO, Brand.class);
 		
-		UserDetails userDetails =(UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-		Users user = ((UserPrincipal)userDetails).getUser();
+		Users user = UserPrincipleObject.getUser();
 		brand.setOrganization(user.getOrganization());
 		
 		Optional<Category> category = categoryRepository.findById(categoryId);
+		boolean existsByBrandNameAndCategory = brandRepository.existsByBrandNameAndCategory(createBrandDTO.getBrandName(), category.get());
+		if(existsByBrandNameAndCategory) {
+			throw new BrandServiceExceptionHandler("Brand with this name: "+createBrandDTO.getBrandName()+" already exists in this Category: "+category.get().getCategoryName(), HttpStatus.CONFLICT);
+		}
 		brand.setCategory(category.get());
 		brand.setLastUpdated(LocalDateTime.now());
 		try {
@@ -65,8 +69,7 @@ public class BrandService {
 		String imagePathForImage = ImageService.getImagePathForImage(image, savedBrand.getBrandId(), baseImageDir);
 		savedBrand.setImagePath("brands/"+imagePathForImage);
 		}
-		
-		
+
 		
 		Brand finalSavedBrand = brandRepository.save(savedBrand);
 		BrandDTO brandDTO = modelMapper.map(finalSavedBrand, BrandDTO.class);
@@ -81,6 +84,25 @@ public class BrandService {
 	        throw new BrandServiceExceptionHandler("Failed to create brand: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
 	    }
 		
+	}
+
+	@Transactional
+	public ApiResponseHandler findBrandsByCategory(UUID categoryId) {
+		Optional<Category> categoryById = categoryRepository.findById(categoryId);
+		if(categoryById.isEmpty()) {
+			throw new CategoryServiceExceptionHandler("Category is not available", HttpStatus.NOT_FOUND);
+		}
+		List<Category> brandsByCategory = brandRepository.findBrandsByCategory(categoryById.get());
+		if(brandsByCategory.isEmpty()) {
+			throw new BrandServiceExceptionHandler("No Brands found in this category: "+categoryById.get().getCategoryName(), HttpStatus.NO_CONTENT);
+		}
+		List<BrandDTO> AllBrandByCategory = brandsByCategory.stream().map(brand->{
+			BrandDTO brandDto = modelMapper.map(brand, BrandDTO.class);
+			return brandDto;
+		}).collect(Collectors.toList());
+		
+		
+		return new ApiResponseHandler(AllBrandByCategory, HttpStatus.OK.value(), "Success");
 	}
 			
 

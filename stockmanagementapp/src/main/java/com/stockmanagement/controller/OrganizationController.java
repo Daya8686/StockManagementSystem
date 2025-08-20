@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -66,16 +67,23 @@ public class OrganizationController {
 	
 	@PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
 	@PutMapping(value = "/update-info")
-	public ResponseEntity<ApiResponseHandler> updateOrganization(@Valid @RequestBody CreateOrganizationDTO createOrganizationDTO){
+	public ResponseEntity<ApiResponseHandler> updateOrganizationInfo(@Valid @RequestBody CreateOrganizationDTO createOrganizationDTO){
 		ApiResponseHandler updateOrganizationInfo = organizationService.updateOrganizationInfo(createOrganizationDTO);
 		return ResponseEntity.status(HttpStatus.OK).body(updateOrganizationInfo);
 	}
 	
 	@PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
 	@PutMapping(value="/update-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<ApiResponseHandler> updateOrgImag(@RequestPart("image") MultipartFile image ){
+	public ResponseEntity<ApiResponseHandler> updateOrgImage(@RequestPart("image") MultipartFile image ){
 		ApiResponseHandler updateOrganizationImage = organizationService.updateOrganizationImage(image);
 		return ResponseEntity.status(HttpStatus.OK).body(updateOrganizationImage);
+	}
+	
+	@DeleteMapping("/delete-org")
+	@PreAuthorize("hasAnyRole('SUPER_ADMIN')")
+	public ResponseEntity<ApiResponseHandler> deleteOrganization(){
+		ApiResponseHandler deleteOrg = organizationService.deleteOrg();
+		return ResponseEntity.status(HttpStatus.OK).body(deleteOrg);
 	}
 	
 

@@ -194,6 +194,20 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
    		errorResponse.setTimestamp(LocalDateTime.now());
    		return new ResponseEntity<>(errorResponse, ex.getHttpStatus());
    	}
-   
+    
+    @ExceptionHandler(UserWiseProductStockExceptionHandler.class)
+   	public ResponseEntity<ErrorResponse> handleUserWiseProductStockExceptionHandler(UserWiseProductStockExceptionHandler ex) {
+   		errorResponse.setMessage(ex.getMessage());
+   		errorResponse.setStatus(ex.getHttpStatus().value());
+   		errorResponse.setTimestamp(LocalDateTime.now());
+   		return new ResponseEntity<>(errorResponse, ex.getHttpStatus());
+   	}
+    @ExceptionHandler(ProductServiceExceptionHandler.class)
+   	public ResponseEntity<ErrorResponse> handleProductServiceExceptionHandler(ProductServiceExceptionHandler ex) {
+   		errorResponse.setMessage(ex.getMessage());
+   		errorResponse.setStatus(ex.getHttpStatus().value());
+   		errorResponse.setTimestamp(LocalDateTime.now());
+   		return new ResponseEntity<>(errorResponse, ex.getHttpStatus());
+   	}
     
 }

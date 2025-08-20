@@ -1,5 +1,9 @@
 package com.stockmanagement.service;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -70,12 +74,7 @@ public class OrganizationService {
 		
 		if(userForOrgCheck.getOrganization()!=null) {
 			throw new OrganizationServiceExceptionHandler("You are been added with Organization you can not add another organization", HttpStatus.CONFLICT);
-		}
-		
-		if(image.getContentType()==null || !ImageService.ALLOWED_IMAGE_TYPES.contains(image.getContentType())) {
-			throw new ImageSaverServiceExceptionHandler("Invalid image type. Allowed types are PNG, JPG, JPEG, SVG.", HttpStatus.BAD_REQUEST);
-		}
-		
+		}		
 
 		organization.setOrganizationCode(generateUniqueOrganizationCode());
 		try {
@@ -154,13 +153,16 @@ public class OrganizationService {
 		@Transactional
 		public ApiResponseHandler updateOrganizationImage(MultipartFile image) {
 			
-			if(image.getContentType()==null || !ImageService.ALLOWED_IMAGE_TYPES.contains(image.getContentType())) {
-				throw new ImageSaverServiceExceptionHandler("Invalid image type. Allowed types are PNG, JPG, JPEG, SVG.", HttpStatus.BAD_REQUEST);
-			}
+			
 			Users users = UserPrincipleObject.getUser();
 			Organization organization = users.getOrganization();
 			
+			try {
+				
+			Path imagePath=Paths.get("src/main/resources/static/images"+File.separator+""+organization.getImagePath());
+			Files.deleteIfExists(imagePath);
 			String newFilename = ImageService.getImagePathForImage(image, organization.getOrgId(), baseImageDir);
+			
 			
 			organization.setImagePath("organizations/"+newFilename);
 			
@@ -169,6 +171,25 @@ public class OrganizationService {
 			OrganizationDTO organizationDTO = modelMapper.map(savedOrgfinal, OrganizationDTO.class);
 			
 			return new ApiResponseHandler(organizationDTO, HttpStatus.OK.value(), "Success");
+			
+		} catch (Exception e) {
+			// If an exception occurs, delete the image (if it was saved)
+			if (image != null && !image.isEmpty()) {
+				ImageService.rollbackImage(image, baseImageDir);
+			}
+			// Rollback the transaction and throw the exception
+			throw new OrganizationServiceExceptionHandler("Failed to change organization image: " + e.getMessage(),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+			
+		}
+		@Transactional
+		@Modifying
+		public ApiResponseHandler deleteOrg() {
+			Users user = UserPrincipleObject.getUser();
+			Organization organization = user.getOrganization();
+			organizationRepo.delete(organization);
+			return new ApiResponseHandler(organization, HttpStatus.OK.value(), "Success");
 			
 		}
 		
@@ -232,8 +253,5 @@ public class OrganizationService {
 
 			
 
-
-
-	
 
 }

@@ -2,6 +2,7 @@ package com.stockmanagement.entity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import jakarta.persistence.CascadeType;
@@ -80,5 +81,17 @@ public class Users {
     @OneToMany(mappedBy = "user")
     private List<SalesRecord> salesRecords;
     
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Users users = (Users) o;
+        return Objects.equals(id, users.id); // Compare only by id or username
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id); // Use only id to generate hash code
+    }
     
 }

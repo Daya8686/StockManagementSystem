@@ -31,6 +31,10 @@ public class ImageService {
 
 	
 	public static String getImagePathForImage(MultipartFile image, UUID id, String baseImageDir) {
+		
+		if(image.getContentType()==null || !ALLOWED_IMAGE_TYPES.contains(image.getContentType())) {
+			throw new ImageSaverServiceExceptionHandler("Invalid image type. Allowed types are PNG, JPG, JPEG, SVG.", HttpStatus.BAD_REQUEST);
+		}
 
 		Path folderPath = Paths.get(baseImageDir);
 

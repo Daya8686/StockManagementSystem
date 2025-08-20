@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.stockmanagement.entity.UserVerificationToken;
+import com.stockmanagement.entity.Users;
 
 import jakarta.transaction.Transactional;
 @Repository
@@ -19,5 +20,7 @@ public interface UserVerificationTokenRepository extends JpaRepository<UserVerif
     @Modifying
     @Query(value = "CALL deleteExpiredUserVerificationTokens()", nativeQuery = true)
     void deleteExpiredVerificationTokens();
+	
+	public UserVerificationToken findByUser(Users user);
 
 }

@@ -108,7 +108,12 @@ public class UserService {
 			throw new UserServiceExceptionHandler("User not found with this username " + userLoginDTO.getUsername(),
 					HttpStatus.BAD_REQUEST);
 		}
+		UserVerificationToken byUser = userVerificationTokenRepository.findByUser(checkUser);
+		
 		if(!checkUser.isUserValid()) {
+			if(byUser!=null) {
+				throw new UserServiceExceptionHandler("Verification Email is already set to your registered Email! please check it.", HttpStatus.FORBIDDEN);
+			}
 	        return verifyEmail(checkUser.getContact().getEmail());	
 		}
 		if (!checkUser.isUserActive()) {

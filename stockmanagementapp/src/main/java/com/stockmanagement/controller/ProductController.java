@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,9 +39,6 @@ public class ProductController {
 	
 	private final Validator validator;
 	
-	
-	
-	
 	public ProductController (Validator validator) {
 		this.validator=validator;
 	}
@@ -60,6 +58,13 @@ public class ProductController {
 		ApiResponseHandler savedProductResponse = productService.createProduct(brandId, createProductDTO, image);
 		
 		return ResponseEntity.status(HttpStatus.CREATED).body(savedProductResponse);
+	}
+	
+	@GetMapping("/brand/{brandId}")
+	@PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN','SALESMAN')")
+	public ResponseEntity<ApiResponseHandler> getAllProductsOfBrand(@PathVariable UUID brandId){
+		ApiResponseHandler allProductsOfBrand = productService.getAllProductsOfBrand(brandId);
+		return ResponseEntity.status(HttpStatus.OK).body(allProductsOfBrand);
 	}
 	
 }

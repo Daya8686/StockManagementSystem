@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,7 +29,7 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
 
 @RestController
-@RequestMapping("/api/brand")
+@RequestMapping("/api/brands")
 public class BrandController {
 
 	@Autowired
@@ -59,6 +60,13 @@ public class BrandController {
 		ApiResponseHandler savedBrandDTO = brandService.createNewBrand(categoryId,createBrandDTO, image);
 		return ResponseEntity.status(HttpStatus.CREATED).body(savedBrandDTO);
 		
+	}
+	
+	@GetMapping("/{categoryId}")
+	@PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN','SALESMAN')")
+	public ResponseEntity<ApiResponseHandler> getBrandByCategory(@PathVariable UUID categoryId){
+		ApiResponseHandler brandsByCategory = brandService.findBrandsByCategory(categoryId);
+		return ResponseEntity.status(HttpStatus.OK).body(brandsByCategory);
 	}
 	
 }

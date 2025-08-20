@@ -1,7 +1,9 @@
 package com.stockmanagement.service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,9 +46,6 @@ public class ProductService {
 	@Modifying
 	public ApiResponseHandler createProduct(UUID brandId, CreateProductDTO createProductDTO, MultipartFile image) {
 		
-		if(image.getContentType()==null || !ImageService.ALLOWED_IMAGE_TYPES.contains(image.getContentType())) {
-			throw new ImageSaverServiceExceptionHandler("Invalid image type. Allowed types are PNG, JPG, JPEG, SVG.", HttpStatus.BAD_REQUEST);
-		}
 		
 		Product product = modelMapper.map(createProductDTO, Product.class);
 		
@@ -81,6 +80,24 @@ public class ProductService {
 		}
 		
 		
+	}
+
+	@Transactional
+	public ApiResponseHandler getAllProductsOfBrand(UUID brandId) {
+		Optional<Brand> brandById = brandRepository.findById(brandId);
+		if(brandById.isEmpty()) {
+			throw new ProductServiceExceptionHandler("Brand is unavailable!!", HttpStatus.NOT_FOUND);
+		}
+		List<Product> allProductsOfBrand = productRepository.findProductsByBrand(brandById.get());
+		if(allProductsOfBrand.isEmpty() || allProductsOfBrand==null) {
+			throw new ProductServiceExceptionHandler("No products Listed with this brand: "+brandById.get().getBrandName(), HttpStatus.NO_CONTENT);
+		}
+		List<ProductDTO> allProductsOfBrandDto = allProductsOfBrand.stream().map(product->{
+			ProductDTO productDto = modelMapper.map(product, ProductDTO.class);
+			return productDto;
+		}).collect(Collectors.toList());
+		
+		return new ApiResponseHandler(allProductsOfBrandDto, HttpStatus.OK.value(), "Success");
 	}
 
 }
